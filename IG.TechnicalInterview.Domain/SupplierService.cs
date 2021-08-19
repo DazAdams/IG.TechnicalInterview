@@ -58,7 +58,8 @@ namespace IG.TechnicalInterview.Domain
 			}
 
 			// Email
-			var invalidEmails = supplier.Emails.Where(x => !Regex.IsMatch(x.EmailAddress, @"^[^@\s] +@[^@\s] +\.[^@\s]+$"));
+			var emailRegex = @"\A(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\Z";
+			var invalidEmails = supplier.Emails.Where(x => !Regex.IsMatch(x.EmailAddress, emailRegex,RegexOptions.IgnoreCase));
 			if (invalidEmails.Any())
 			{
 				var emails = string.Join(", ", invalidEmails.Select(x => x.EmailAddress).ToArray());
@@ -68,7 +69,7 @@ namespace IG.TechnicalInterview.Domain
 			}
 
 			// Phone
-			var phoneRegEx = "/^[0-9]{0,10}$/gm";
+			var phoneRegEx = @"^[0-9]{0,10}$"; // $"//"/^[0-9]{0,10}$/gm";
 			var invalidPhoneNumbers = supplier.Phones.Where(x=> !Regex.IsMatch(x.PhoneNumber,phoneRegEx));
 
 			if (invalidPhoneNumbers.Any())

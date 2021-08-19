@@ -20,6 +20,7 @@ namespace IG.TechnicalInterview.Test
 		.Options;
 		private SupplierService _supplierService;
 		private Guid _validId;
+		const string VALID_PHONE = "1111111111";
 
 		[OneTimeSetUp]
 		public void Setup()
@@ -37,20 +38,24 @@ namespace IG.TechnicalInterview.Test
 			var suppliers = Builder<Supplier>.CreateListOfSize(10)
 				.All()
 					.With(x => x.Phones = phones)
+					.With(x=>x.Id = Guid.NewGuid())
 				.Random(1).With(x => x.Id = _validId).Build();
 
 			context.Suppliers.AddRange(suppliers);
 			context.SaveChanges();
 		}
 
+		#region GetSuppliers
 		[Test]
 		public async Task GetSuppliers_ReturnsSuppliers()
 		{
 			var result = await _supplierService.GetSuppliers();
 
 			Assert.IsTrue(result.Any());
-		}
+		} 
+		#endregion
 
+		#region GetSupplier
 		[Test]
 		public async Task GetSupplier_ValidId_ReturnsSupplier()
 		{
@@ -64,11 +69,13 @@ namespace IG.TechnicalInterview.Test
 			var result = await _supplierService.GetSupplier(Guid.Empty);
 			Assert.IsNull(result);
 		}
+		#endregion
 
+		#region InsertSupplier
 		[Test]
 		public void InsertSupplier_ActivationDateToday_ThrowsArgumentException()
 		{
-	
+
 			var supplier = Builder<Supplier>.CreateNew().With(x => x.ActivationDate = DateTime.UtcNow).Build();
 			Assert.ThrowsAsync<ArgumentException>(async () => await _supplierService.InsertSupplier(supplier));
 		}
@@ -77,10 +84,100 @@ namespace IG.TechnicalInterview.Test
 		public async Task InsertSupplier_ActivationDateInFuture_IsSaved()
 		{
 			var id = Guid.NewGuid();
-			var supplier = Builder<Supplier>.CreateNew().With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1)).With(x => x.Id = id).Build();
+			var id2 = Guid.NewGuid();
+			var supplier = Builder<Supplier>.CreateNew()
+				.With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1))
+				.With(x => x.Id = id).Build();
 			await _supplierService.InsertSupplier(supplier);
 			var matched = await _supplierService.GetSupplier(supplier.Id);
-			Assert.AreEqual(id,matched.Id);
+			Assert.AreEqual(id, matched.Id);
 		}
+
+		[Test]
+		public void InsertSupplier_InvalidPhoneNumberNonNumeric_ThrowsArgumentException()
+		{
+
+			List<Phone> phones = new List<Phone>
+			{
+				new Phone { Id = Guid.NewGuid(), IsPreferred = true, PhoneNumber = "111111aa" }
+			};
+
+			var supplier = Builder<Supplier>.CreateNew()
+				.With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1))
+				.With(x => x.Phones = phones).Build();
+			Assert.ThrowsAsync<ArgumentException>(async () => await _supplierService.InsertSupplier(supplier));
+		}
+
+		[Test]
+		public void InsertSupplier_InvalidPhoneNumberTooLong_ThrowsArgumentException()
+		{
+
+			List<Phone> phones = new List<Phone>
+			{
+				new Phone { Id = Guid.NewGuid(), IsPreferred = true, PhoneNumber = "111111111111111111" }
+			};
+
+			var supplier = Builder<Supplier>.CreateNew()
+				.With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1))
+				.With(x => x.Phones = phones).Build();
+			Assert.ThrowsAsync<ArgumentException>(async () => await _supplierService.InsertSupplier(supplier));
+		}
+
+		[Test]
+		public async Task InsertSupplier_ValidPhoneNumber_IsSaved()
+		{
+			var id = Guid.NewGuid();
+			Console.WriteLine(id);
+
+			List<Phone> phones = new List<Phone>
+			{
+				new Phone { Id = Guid.NewGuid(), IsPreferred = true, PhoneNumber = VALID_PHONE }
+			};
+
+			var supplier = Builder<Supplier>.CreateNew()
+				.With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1))
+				.With(x => x.Id = id)
+				.With(x => x.Phones = phones).Build();
+			await _supplierService.InsertSupplier(supplier);
+			var matched = await _supplierService.GetSupplier(supplier.Id);
+			Assert.AreEqual(id, matched.Id);
+		}
+
+		[Test]
+		public void InsertSupplier_InvalidEmailAddress_ThrowsArgumentException()
+		{
+
+			List<Email> emails = new List<Email>
+			{
+				new Email { Id = Guid.NewGuid(), IsPreferred = true, EmailAddress = "name@" }
+			};
+
+			var supplier = Builder<Supplier>.CreateNew()
+				.With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1))
+				.With(x => x.Emails = emails).Build();
+			Assert.ThrowsAsync<ArgumentException>(async () => await _supplierService.InsertSupplier(supplier));
+		}
+		[Test]
+		public async Task InsertSupplier_ValidEmailAddress_IsSaved()
+		{
+			var id = Guid.NewGuid();
+			Console.WriteLine(id);
+
+			List<Email> emails = new List<Email>
+			{
+				new Email { Id = Guid.NewGuid(), IsPreferred = true, EmailAddress = "name@domain.com" }
+			};
+
+
+			var supplier = Builder<Supplier>.CreateNew()
+				.With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1))
+				.With(x => x.Id = id)
+				.With(x => x.Emails = emails).Build();
+			await _supplierService.InsertSupplier(supplier);
+			var matched = await _supplierService.GetSupplier(supplier.Id);
+			Assert.AreEqual(id, matched.Id);
+		}
+
+		#endregion
 	}
 }
