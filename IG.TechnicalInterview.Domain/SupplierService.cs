@@ -52,14 +52,9 @@ namespace IG.TechnicalInterview.Domain
 		{
 			// Validate supplier
 			// ActivationDate
-			if (supplier.ActivationDate == null)
+			if (supplier.ActivationDate.Date < DateTime.UtcNow.Date.AddDays(1))
 			{
-				throw new ArgumentNullException("ActivationDate", "Activation Date must not be null");
-			}
-
-			if (supplier.ActivationDate < DateTime.UtcNow.AddDays(1))
-			{
-				throw new ArgumentNullException("ActivationDate", "Activation Date must be tomorrow or later");
+				throw new ArgumentException("ActivationDate", "Activation Date must be tomorrow or later");
 			}
 
 			// Email
