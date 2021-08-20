@@ -15,11 +15,13 @@ namespace IG.TechnicalInterview.Test
 {
 	public class SupplierControllerTests
 	{
-		private DbContextOptions<SupplierContext> dbContextOptions = new DbContextOptionsBuilder<SupplierContext>()
+		private readonly DbContextOptions<SupplierContext> dbContextOptions = new DbContextOptionsBuilder<SupplierContext>()
 		.UseInMemoryDatabase(databaseName: "SupplierDatabase")
 		.Options;
 		private SupplierService _supplierService;
 		private Guid _validId;
+		private Guid _inActiveSupplierId;
+		private Guid _inActiveSupplierId2;
 		const string VALID_PHONE = "1111111111";
 
 		[OneTimeSetUp]
@@ -34,12 +36,37 @@ namespace IG.TechnicalInterview.Test
 		{
 			var context = new SupplierContext(dbContextOptions);
 			_validId = Guid.NewGuid();
+			_inActiveSupplierId = Guid.NewGuid();
+			_inActiveSupplierId2 = Guid.NewGuid();
 			var phones = Builder<Phone>.CreateListOfSize(2).Build();
+			var emails = Builder<Email>.CreateListOfSize(2).Build();
 			var suppliers = Builder<Supplier>.CreateListOfSize(10)
 				.All()
 					.With(x => x.Phones = phones)
-					.With(x=>x.Id = Guid.NewGuid())
-				.Random(1).With(x => x.Id = _validId).Build();
+					.With(x => x.Emails = emails)
+					.With(x => x.Id = Guid.NewGuid())
+				.Random(1).With(x => x.Id = _validId)
+				.Build();
+
+			//Add  InActive Suppliers
+
+			suppliers.Add(new Supplier
+			{
+				Id = _inActiveSupplierId,
+				FirstName = "Test",
+				LastName = "McTester",
+				Title = "Dr",
+				ActivationDate = null
+			});
+
+			suppliers.Add(new Supplier
+			{
+				Id = _inActiveSupplierId2,
+				FirstName = "Test",
+				LastName = "McTester2",
+				Title = "Mr",
+				ActivationDate = null
+			});
 
 			context.Suppliers.AddRange(suppliers);
 			context.SaveChanges();
@@ -52,7 +79,7 @@ namespace IG.TechnicalInterview.Test
 			var result = await _supplierService.GetSuppliers();
 
 			Assert.IsTrue(result.Any());
-		} 
+		}
 		#endregion
 
 		#region GetSupplier
@@ -84,7 +111,6 @@ namespace IG.TechnicalInterview.Test
 		public async Task InsertSupplier_ActivationDateInFuture_IsSaved()
 		{
 			var id = Guid.NewGuid();
-			var id2 = Guid.NewGuid();
 			var supplier = Builder<Supplier>.CreateNew()
 				.With(x => x.ActivationDate = DateTime.UtcNow.Date.AddDays(1))
 				.With(x => x.Id = id).Build();
@@ -178,6 +204,21 @@ namespace IG.TechnicalInterview.Test
 			Assert.AreEqual(id, matched.Id);
 		}
 
+		#endregion
+
+		#region DeleteSupplier
+		[Test]
+		public async Task DeleteSupplier_IsInactive_ReturnsSupplier()
+		{
+			var result = await _supplierService.DeleteSupplier(_inActiveSupplierId);
+			Assert.AreEqual(_inActiveSupplierId, result.Id);
+		}
+
+		[Test]
+		public void DeleteSupplier_IsActive_ThrowsException()
+		{
+			Assert.ThrowsAsync<Exception>(async () => await _supplierService.DeleteSupplier(_validId));
+		}
 		#endregion
 	}
 }

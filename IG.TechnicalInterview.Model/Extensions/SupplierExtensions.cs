@@ -4,7 +4,7 @@
     {
         public static bool IsActive(this Supplier.Supplier supplier)
         {
-            return supplier.ActivationDate != null;
+             return supplier.ActivationDate != null;
         }
     }
 }

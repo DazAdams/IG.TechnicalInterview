@@ -52,7 +52,7 @@ namespace IG.TechnicalInterview.Domain
 		{
 			// Validate supplier
 			// ActivationDate
-			if (supplier.ActivationDate.Date < DateTime.UtcNow.Date.AddDays(1))
+			if (supplier.ActivationDate?.Date < DateTime.UtcNow.Date.AddDays(1))
 			{
 				throw new ArgumentException("ActivationDate", "Activation Date must be tomorrow or later");
 			}
