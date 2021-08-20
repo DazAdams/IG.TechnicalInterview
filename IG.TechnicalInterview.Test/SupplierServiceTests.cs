@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace IG.TechnicalInterview.Test
 {
-	public class SupplierControllerTests
+	public class SupplierServiceTests
 	{
 		private readonly DbContextOptions<SupplierContext> dbContextOptions = new DbContextOptionsBuilder<SupplierContext>()
 		.UseInMemoryDatabase(databaseName: "SupplierDatabase")
